@@ -6,12 +6,35 @@ use Yii;
 use app\models\Results;
 use app\models\Experiment;
 use yii\web\Controller;
+use yii\filters\AccessControl;
+use yii\filters\VerbFilter;
 
 class ResultsController extends Controller
 {
+     public function behaviors()
+    {
+        return [
+            'access' => [
+                'class' => AccessControl::className(),
+                'rules' => [
+                    [
+                        'allow' => true,
+                        'roles' => ['@'],
+                    ],
+                ],
+            ],
+            'verbs' => [
+                'class' => VerbFilter::className(),
+                'actions' => [
+                    'logout' => ['post'],
+                ],
+            ],
+        ];
+    } 
     public function actionIndex()
     {
-        ResultsController::addResult();
+      //  ResultsController::addResult();
+        self::addResult();
         
         $sql = 'SELECT * FROM `results` WHERE id_exp = (SELECT MAX( `id_exp` )FROM results) ORDER BY num';
         $results = Results::findBySql($sql)->all();
@@ -29,7 +52,7 @@ class ResultsController extends Controller
         $experiment = new Experiment;
         $experiment->date = date("y-m-d");
         $experiment->time = date ("H:i:s");
-        $experiment->name= "Auto";
+        $experiment->name= Yii::$app->user->identity->name;
         $experiment->bones_num = 2;
         $experiment->throws=36000;
         $experiment->save(); 

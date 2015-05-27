@@ -3,9 +3,9 @@
 namespace app\models;
 
 use Yii;
-use yii\base\NotSupportedException;
+//use yii\base\NotSupportedException;
 use yii\db\ActiveRecord;
-use yii\helpers\Security;
+//use yii\helpers\Security;
 use yii\web\IdentityInterface;
 
 /**
@@ -19,7 +19,7 @@ use yii\web\IdentityInterface;
 class User extends ActiveRecord implements IdentityInterface
 {
      public $username;
-   
+     
    public static function findIdentity($id)
     {
         return static::findOne($id);
@@ -52,7 +52,7 @@ class User extends ActiveRecord implements IdentityInterface
     
     public function validatePassword($password)
     {
-        return trim($this->password) === ($password); //sha1
+        return \Yii::$app->getSecurity()->validatePassword($password,$this->password);
     } 
     
     /**
@@ -62,7 +62,7 @@ class User extends ActiveRecord implements IdentityInterface
      */
     public function setPassword($password)
     {
-        $this->password_hash = Security::generatePasswordHash($password);
+        $this->password = Yii::$app->getSecurity()->generatePasswordHash($password);
     } 
  
     /**
@@ -70,23 +70,9 @@ class User extends ActiveRecord implements IdentityInterface
      */
     public function generateAuthKey()
     {
-        $this->auth_key = Security::generateRandomKey();
+        $this->auth_key = Yii::$app->getSecurity()->generateRandomString($length = 16);
     } 
-    /**
-     * Generates new password reset token
-     */
-  /*  public function generatePasswordResetToken()
-    {
-        $this->password_reset_token = Security::generateRandomKey() . '_' . time();
-    } */
-    /**
-     * Removes password reset token
-     */
-  /*  public function removePasswordResetToken()
-    {
-        $this->password_reset_token = null;
-    } */
-
+    
     /**
      * @inheritdoc
      */
@@ -94,26 +80,18 @@ class User extends ActiveRecord implements IdentityInterface
     {
         return 'user';
     }
-
-    /**
-     * @inheritdoc
-     */
-    public function rules()
-    {
-        return [
-            [['name', 'password'], 'required'],
-            [['name', 'password'], 'string', 'max' => 30]
-        ];
-    }
-
     /**
      * @inheritdoc
      */
     public function attributeLabels()
     {
         return [
+            'id' => 'ID',
             'name' => 'Name',
             'password' => 'Password',
+            'auth_key' => 'Auth Key',
+            'accessToken' => 'Access Token',
+            'email' => 'Email',
         ];
     }
 

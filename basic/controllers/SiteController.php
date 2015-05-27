@@ -5,13 +5,32 @@ namespace app\controllers;
 use Yii;
 use yii\filters\AccessControl;
 use yii\web\Controller;
-use yii\filters\VerbFilter;
+//use yii\filters\VerbFilter;
 use app\models\LoginForm;
-use app\models\ContactForm;
+use app\models\RegistrationForm;
 
 class SiteController extends Controller
 {
-    
+    public function behaviors()
+    {
+        return [
+            'access' => [
+                'class' => AccessControl::className(),
+                'rules' => [
+                    [
+                       'allow' => true,
+                       'actions' => ['index','registration','login','captcha'],
+                       'roles' => ['?'],
+                    ],
+                    [
+                        'allow' => true,
+                         'roles' => ['@'],
+                    ],
+    ],
+            ],
+        
+        ];
+    }
     public function actions()
     {
         return [
@@ -52,21 +71,22 @@ class SiteController extends Controller
 
         return $this->goHome(); //Redirects the browser to the home page
     }
-
-    public function actionContact()
+    
+     public function actionRegistration()
     {
-        $model = new ContactForm();
-        if ($model->load(Yii::$app->request->post()) && $model->contact(Yii::$app->params['adminEmail'])) {
-            Yii::$app->session->setFlash('contactFormSubmitted');
-
-            return $this->refresh();
-        } else {
-            return $this->render('contact', [
-                'model' => $model,
-            ]);
+        $model = new RegistrationForm();
+        if ($model->load(Yii::$app->request->post())) {
+            if ($user = $model->signup()) {
+                if (Yii::$app->getUser()->login($user)) {
+                    return $this->goHome();
+                }
+            }
         }
+        return $this->render('registration', [
+            'model' => $model,
+        ]);
     }
-
+    
     public function actionAbout()
     {
         return $this->render('about');
